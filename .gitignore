@@ -25,3 +25,8 @@ postgres_data/
 .vscode/
 .idea/
 *.log
+
+# Local-only docs / notes (may contain secrets)
+CONFIG_README.md
+notes.md
+CLAUDE.md

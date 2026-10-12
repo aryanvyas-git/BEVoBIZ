@@ -25,7 +25,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_ORIGIN],
+    allow_origins=settings.FRONTEND_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
