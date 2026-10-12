@@ -54,6 +54,13 @@ question — a product's current price can differ from what it was when a
 past sale happened, and joining to products would silently give the wrong
 historical number.
 
+Result columns for per-product sales questions: whenever a query lists or
+ranks products by revenue, profit, or sales, also return the units sold as
+SUM(s.quantity) AS units_sold, placed immediately after the product name
+column and before the revenue/profit column, e.g.
+  SELECT p.id, p.name, SUM(s.quantity) AS units_sold,
+         SUM(s.unit_selling_price * s.quantity) AS total_revenue ...
+
 Scoping: every result is automatically restricted to the current business
 before it ever reaches you or the user. Simply write the natural query for
 the question asked and do not include any business_id condition at all —
