@@ -39,10 +39,17 @@ function KpiIcon({ name }) {
   )
 }
 
+const PERIODS = [
+  { key: 'today', label: 'Today' },
+  { key: 'week', label: 'This Week' },
+  { key: 'month', label: 'This Month' },
+]
+
 export default function DashboardHome({ onNavigateToInventory }) {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [period, setPeriod] = useState('today')
 
   useEffect(() => {
     let cancelled = false
@@ -86,18 +93,34 @@ export default function DashboardHome({ onNavigateToInventory }) {
           <div className="kpi-sub">Retail value {formatCurrency(stats.inventory_retail_valuation)}</div>
         </div>
 
-        <div className="kpi-card">
-          <div className="kpi-icon"><KpiIcon name="revenue" /></div>
-          <div className="kpi-label">Total Revenue</div>
-          <div className="kpi-value">{formatCurrency(stats.total_revenue)}</div>
-          <div className="kpi-sub">{formatNumber(stats.total_units_sold)} units sold</div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon"><KpiIcon name="profit" /></div>
-          <div className="kpi-label">Total Profit</div>
-          <div className="kpi-value">{formatCurrency(stats.total_profit)}</div>
-          <div className="kpi-sub">{formatNumber(stats.product_count)} products tracked</div>
+        <div className="kpi-card kpi-card-wide">
+          <div className="kpi-card-header">
+            <div className="kpi-icon"><KpiIcon name="revenue" /></div>
+            <div className="tab-bar tab-bar-sm period-toggle">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  className={`tab-btn ${period === p.key ? 'active' : ''}`}
+                  onClick={() => setPeriod(p.key)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="kpi-revenue-profit-grid">
+            <div>
+              <div className="kpi-label">Revenue</div>
+              <div className="kpi-value">{formatCurrency(stats.period_stats[period].revenue)}</div>
+              <div className="kpi-sub">{formatNumber(stats.period_stats[period].units_sold)} units sold</div>
+            </div>
+            <div>
+              <div className="kpi-label">Profit</div>
+              <div className="kpi-value">{formatCurrency(stats.period_stats[period].profit)}</div>
+              <div className="kpi-sub">{formatNumber(stats.product_count)} products tracked</div>
+            </div>
+          </div>
         </div>
 
         <div className={`kpi-card ${reorderAlerts > 0 ? 'kpi-card-alert' : ''}`}>

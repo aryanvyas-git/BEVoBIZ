@@ -13,6 +13,7 @@ from app.schemas.dashboard import (
     CategorySales,
     DashboardStats,
     LowStockItem,
+    PeriodStats,
     SalesOverTimePoint,
     TopProduct,
 )
@@ -74,8 +75,48 @@ def get_dashboard_stats(
         .one()
     )
 
-    today = datetime.now(timezone.utc).date()
-    period_start = datetime.now(timezone.utc) - timedelta(days=SALES_CHART_DAYS - 1)
+    now = datetime.now(timezone.utc)
+    today = now.date()
+    today_start = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+    week_start = today_start - timedelta(days=today.weekday())
+    month_start = today_start.replace(day=1)
+    period_bounds = {"today": today_start, "week": week_start, "month": month_start}
+
+    period_cols = []
+    for start in period_bounds.values():
+        in_period = Sale.sold_at >= start
+        period_cols.extend(
+            [
+                func.coalesce(
+                    func.sum(case((in_period, Sale.unit_selling_price * Sale.quantity), else_=0)),
+                    0,
+                ),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (
+                                in_period,
+                                (Sale.unit_selling_price - Sale.unit_cost_price) * Sale.quantity,
+                            ),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ),
+                func.coalesce(func.sum(case((in_period, Sale.quantity), else_=0)), 0),
+            ]
+        )
+    period_row = db.query(*period_cols).filter(Sale.business_id == business_id).one()
+    period_stats = {
+        key: PeriodStats(
+            revenue=period_row[i * 3],
+            profit=period_row[i * 3 + 1],
+            units_sold=period_row[i * 3 + 2],
+        )
+        for i, key in enumerate(period_bounds)
+    }
+
+    period_start = now - timedelta(days=SALES_CHART_DAYS - 1)
     day_expr = func.date(Sale.sold_at)
     daily_rows = (
         db.query(
@@ -158,6 +199,7 @@ def get_dashboard_stats(
         total_revenue=total_revenue,
         total_profit=total_profit,
         total_units_sold=total_units_sold,
+        period_stats=period_stats,
         sales_over_time=sales_over_time,
         top_products=top_products,
         sales_by_category=sales_by_category,

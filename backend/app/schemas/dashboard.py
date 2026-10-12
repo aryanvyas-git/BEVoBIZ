@@ -28,6 +28,12 @@ class LowStockItem(BaseModel):
     reorder_level: int
 
 
+class PeriodStats(BaseModel):
+    revenue: Decimal
+    profit: Decimal
+    units_sold: int
+
+
 class DashboardStats(BaseModel):
     inventory_cost_valuation: Decimal
     inventory_retail_valuation: Decimal
@@ -38,6 +44,7 @@ class DashboardStats(BaseModel):
     total_revenue: Decimal
     total_profit: Decimal
     total_units_sold: int
+    period_stats: dict[str, PeriodStats]
     sales_over_time: list[SalesOverTimePoint]
     top_products: list[TopProduct]
     sales_by_category: list[CategorySales]
